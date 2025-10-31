@@ -2,16 +2,14 @@ name: Continuous Delivery (CD)
 
 on:
   workflow_run:
-    workflows: ["Continuous Integration (CI)"] # 💡 ci.yml の name と完全に一致させる
+    workflows: ["Continuous Integration (CI)"]
     types: [completed]
     branches: [main]
 
 jobs:
-  # 💡 workflow_run を使う場合、needs: ci は不要です
   deploy:
     runs-on: ubuntu-latest
     
-    # workflow_run を使ってトリガーされた場合、成功をチェックするステップを追加
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     env:
@@ -20,10 +18,23 @@ jobs:
 
     steps:
       - name: ⬇️ Checkout Repository
-        # workflow_run の場合は、リポジトリの履歴を再度チェックアウトする必要があります
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }} # CIが実行されたコミットをチェックアウト
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: ⚙️ Setup Node.js
-        # ... 後略 ...
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🔄 Apply D1 Migrations to Remote DB
+        run: npx wrangler d1 migrations apply todo_DB --remote
+
+      - name: 🚀 Deploy Worker to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
