@@ -1,0 +1,42 @@
+name: Continuous Delivery (CD)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    # 💡 CIジョブ (ci) が成功した場合にのみ実行
+    needs: ci
+    runs-on: ubuntu-latest
+    
+    # Cloudflareの認証情報を設定
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      # 💡 D1マイグレーションの自動適用ステップ
+      # --remoteフラグを付け、本番DBに未適用のマイグレーションを適用します
+      - name: 🔄 Apply D1 Migrations to Remote DB
+        # todo_DB は wrangler.toml の binding 名
+        run: npx wrangler d1 migrations apply todo_DB --remote
+
+      - name: 🚀 Deploy Worker to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          # 💡 --name オプションは wrangler.toml の name が使われるため省略してもOKです
