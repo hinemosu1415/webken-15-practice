@@ -9,7 +9,23 @@
 	"compatibility_date": "2025-10-29",
 	"observability": {
 		"enabled": true
-	}
+	},
+	"assets": {
+		"directory": "./public"
+	},
+	"d1_databases": [
+		{
+			"binding": "todo_DB",
+			"database_name": "todo_DB",
+			"database_id": "717e82c3-3724-49b1-a6e2-1aef10787beb",
+			"migrations_dir": "db/migrations"
+		},
+		{
+			"binding": "todo_DB_remote",
+			"database_name": "todo_DB_remote",
+			"database_id": "5ac9e641-623c-40a6-b975-0aeb0cad8f09"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

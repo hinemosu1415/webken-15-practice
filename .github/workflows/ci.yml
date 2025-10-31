@@ -1,0 +1,33 @@
+name: Continuous Integration (CI)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # お使いのNode.jsバージョンに合わせてください
+
+      - name: 📦 Install Dependencies
+        run: npm install
+
+      # 💡 テストは緩めでとのことなので、ここでは型チェックとビルドチェックのみを行います
+      - name: 🏗️ Run Build (Type Check & Transpilation)
+        run: npm run build # package.jsonに 'build': 'tsc' などが必要です
+        # (まだ 'build' スクリプトがない場合は、package.jsonに追加してください)
+
+      - name: ✅ Check Code Style (Optional)
+        # 例: ESLintなどを使用している場合はここで実行します
+        run: echo "Skipping linting for brevity"
